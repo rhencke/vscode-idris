@@ -1,10 +1,17 @@
-const fs = require("fs")
-const glob = require("glob")
-const _ = require('lodash')
-const vscode = require('vscode')
-const Maybe = require('../maybe.js')
+import * as fs from "fs";
+import * as glob from "glob";
+import * as _ from "lodash";
+import * as vscode from "vscode";
+import Maybe from "../maybe"
 
-const idrisKeywords = [
+export interface Definition {
+  path: string
+  module: string
+  line: string
+  column: string
+}
+
+export const idrisKeywords = [
   "if",
   "then",
   "else",
@@ -66,7 +73,7 @@ const idrisKeywords = [
 ]
 
 // https://github.com/idris-lang/Idris-dev/blob/master/src/Idris/Package/Parser.hs
-let ipkgKeywords = [
+export let ipkgKeywords = [
   "package",
   "executable",
   "main",
@@ -89,14 +96,14 @@ let ipkgKeywords = [
   "maintainer"
 ]
 
-let getImportPattern = () => {
+export let getImportPattern = () => {
   return /import\s+(public\s+)?(([A-Z]\w*)(\.[A-Z]\w*)*)(\s+as\s+(\w+))?[\r\n|\n]/g
 }
 
-let getAllIdents = () => {
+export let getAllIdents = () => {
   let files = getAllFilesExts(['idr', 'lidr'])
-  let defList = files.map((uri) => {
-    return getIdents(uri).filter((name) => {
+  let defList = files.map((uri: string) => {
+    return getIdents(uri).filter((name: string) => {
       return !/\b\d+\b/g.test(name) && !idrisKeywords.includes(name)
     }).map((name) => {
       return { name, uri }
@@ -110,7 +117,7 @@ let identRegex = /'?[a-zA-Z0-9_][a-zA-Z0-9_-]*'?/g
 let identMatch
 let identList
 
-let getIdents = (uri) => {
+export let getIdents = (uri: string) => {
   identList = []
 
   let content = fs.readFileSync(uri).toString()
@@ -123,7 +130,7 @@ let getIdents = (uri) => {
   return identList
 }
 
-let getAllPositions = (name, uri) => {
+export let getAllPositions = (name: string, uri: string) => {
   let positions = []
   let content = fs.readFileSync(uri).toString()
   let contents = content.split("\n")
@@ -146,22 +153,22 @@ let getAllPositions = (name, uri) => {
   return positions
 }
 
-let getModuleName = (uri) => {
+export let getModuleName = (uri: string) => {
   let content = fs.readFileSync(uri).toString()
   let modulePattern = /\bmodule(.*)\s+/g
   let moduleMatch = modulePattern.exec(content)
   return moduleMatch ? moduleMatch[1].trim() : null
 }
 
-let getAllModuleName = () => {
+export let getAllModuleName = () => {
   let files = getAllFilesExts(['idr', 'lidr'])
-  let moduleNames = files.map((uri) => {
+  let moduleNames = files.map((uri: string) => {
     return getModuleName(uri)
   })
   return _.uniqWith(moduleNames, _.isEqual)
 }
 
-let getImportedModules = (uri) => {
+export let getImportedModules = (uri: string) => {
   let content = fs.readFileSync(uri).toString()
   let importPattern = getImportPattern()
   let match
@@ -172,7 +179,7 @@ let getImportedModules = (uri) => {
   return importedModules
 }
 
-let getImportedModuleAndAlias = (uri) => {
+export let getImportedModuleAndAlias = (uri: string) => {
   let content = fs.readFileSync(uri).toString()
   let importPattern = getImportPattern()
   let match
@@ -187,20 +194,20 @@ let getImportedModuleAndAlias = (uri) => {
   return importedModules
 }
 
-let isDefinitonEqual = (def1, def2) => {
+export let isDefinitonEqual = (def1: Definition, def2: Definition) => {
   return def1.path == def2.path
     && def1.module == def2.module
     && def1.line == def2.line
     && def1.column == def2.column
 }
 
-let getSafeRoot = () => {
+export let getSafeRoot = () => {
   let root = vscode.workspace.rootPath
   let safeRoot = root === undefined ? "" : root
   return safeRoot
 }
 
-let getAllFiles = (ext) => {
+export let getAllFiles = (ext: string) => {
   if (!_.isEmpty(getSafeRoot())) {
     let files = glob.sync(getSafeRoot() + "/**/*")
     return files.filter((file) => {
@@ -214,26 +221,9 @@ let getAllFiles = (ext) => {
   }
 }
 
-let getAllFilesExts = (exts) => {
+export let getAllFilesExts = (exts: string[]) => {
   let filess = exts.map((ext) => {
     return getAllFiles(ext)
   })
   return _.flatten(filess)
-}
-
-module.exports = {
-  idrisKeywords,
-  ipkgKeywords,
-  getModuleName,
-  getAllModuleName,
-  getImportedModules,
-  getSafeRoot,
-  getAllFiles,
-  getAllFilesExts,
-  getIdents,
-  getAllIdents,
-  isDefinitonEqual,
-  getAllPositions,
-  getImportPattern,
-  getImportedModuleAndAlias
 }

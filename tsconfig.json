@@ -5,7 +5,10 @@
 		"allowJs": true,
 		"noImplicitAny": true,
 		"noImplicitReturns": true,
-		"module": "commonjs"
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"target": "es2016",
+		"lib": [ "es2016" ]
 	},
 	"exclude": [
 		"node_modules",

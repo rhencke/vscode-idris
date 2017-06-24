@@ -1,6 +1,6 @@
 //http://jrsinclair.com/articles/2016/marvellously-mysterious-javascript-maybe-monad/
 
-module.exports = class Maybe<T> {
+export default class Maybe<T> {
   private __value: T;
 
   private constructor(val: T) {
