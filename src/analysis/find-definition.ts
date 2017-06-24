@@ -103,7 +103,7 @@ let getDefinitionLocations = (identifier: string) => {
   })
 }
 
-let findDefinitionInFiles = (identifier: string, uri: string) => {
+export let findDefinitionInFiles = (identifier: string, uri: string) => {
   let locations = getDefinitionLocations(identifier)
   let importedModules = common.getImportedModules(uri)
   let legalLocations = locations.filter((loc) => {
@@ -113,7 +113,7 @@ let findDefinitionInFiles = (identifier: string, uri: string) => {
   return legalLocations[0]
 }
 
-let findDefinitionWithAliasInFiles = (identifier: string, alias: string, uri: string): Definition => {
+export let findDefinitionWithAliasInFiles = (identifier: string, alias: string, uri: string): Definition => {
   let locations = getDefinitionLocations(identifier)
   let importedModuleAlias = common.getImportedModuleAndAlias(uri)
 
@@ -126,7 +126,7 @@ let findDefinitionWithAliasInFiles = (identifier: string, alias: string, uri: st
   return legalLocations[0]
 }
 
-let findDefinitionForModule = (moduleName: string): Definition => {
+export let findDefinitionForModule = (moduleName: string): Definition => {
   return common.getAllFilesExts(['idr', 'lidr']).map((file) => {
     let content = fs.readFileSync(file).toString()
     if (new RegExp(`(>\\s+)?module\\s+${moduleName}\\s*`, "g").test(content)) {
@@ -142,10 +142,4 @@ let findDefinitionForModule = (moduleName: string): Definition => {
   }).filter((loc) => {
     return loc != null
   })[0]
-}
-
-module.exports = {
-  findDefinitionInFiles,
-  findDefinitionWithAliasInFiles,
-  findDefinitionForModule
 }
