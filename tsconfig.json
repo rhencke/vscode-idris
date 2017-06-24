@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"outDir": "out",
+		"rootDir": ".",
+		"allowJs": true,
+		"noImplicitAny": true,
+		"noImplicitReturns": true,
+		"module": "commonjs"
+	},
+	"exclude": [
+		"node_modules",
+		"out"
+	]
+}

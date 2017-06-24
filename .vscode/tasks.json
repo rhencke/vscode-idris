@@ -21,5 +21,7 @@
 	"showOutput": "silent",
 
 	// we run the custom script "compile" as defined in package.json
-	"args": ["run", "prepublish"]
+	"args": ["run", "prepublish"],
+
+    "problemMatcher": "$tsc"
 }
