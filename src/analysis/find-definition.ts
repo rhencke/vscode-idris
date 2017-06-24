@@ -1,8 +1,9 @@
-const fs = require("fs")
-const path = require("path")
-const common = require('./common')
+import * as fs from "fs";
+import * as path from "path";
+import * as common from "./common";
+import Definition from "../Definition"
 
-let findDefinitionForADTTypeAndFunctions = (contents, definition, uri, moduleName) => {
+let findDefinitionForADTTypeAndFunctions = (contents: string[], definition: string, uri: string, moduleName: string): Definition => {
   for (let i = 0; i < contents.length; i++) {
     let former = contents[i - 1] ? contents[i - 1] : ""
     let latter = contents[i + 1] ? contents[i + 1] : ""
@@ -54,12 +55,13 @@ let findDefinitionForADTTypeAndFunctions = (contents, definition, uri, moduleNam
       }
     }
   }
+  return null
 }
 
 /**
  * Normal functions and GADTs functions
  */
-let findDefinitionForFunctions = (contents, definition, uri, moduleName) => {
+let findDefinitionForFunctions = (contents: string[], definition: string, uri: string, moduleName: string): Definition => {
   for (let i = 0; i < contents.length; i++) {
     if (contents[i].includes(definition)
       && contents[i].includes(":")
@@ -79,11 +81,12 @@ let findDefinitionForFunctions = (contents, definition, uri, moduleName) => {
       }
     }
   }
+  return null
 }
 
-let findDefinitionInFile = (definition, uri) => {
+let findDefinitionInFile = (definition: string, uri: string): Definition => {
   let moduleName = common.getModuleName(uri)
-  if (!moduleName) return
+  if (!moduleName) return null
 
   let content = fs.readFileSync(uri).toString()
   let contents = content.split("\n")
@@ -92,7 +95,7 @@ let findDefinitionInFile = (definition, uri) => {
   return funcDef || adtTypeFuncDef
 }
 
-let getDefinitionLocations = (identifier) => {
+let getDefinitionLocations = (identifier: string) => {
   return common.getAllFilesExts(['idr', 'lidr']).map((file) => {
     return findDefinitionInFile(identifier, file)
   }).filter((loc) => {
@@ -100,7 +103,7 @@ let getDefinitionLocations = (identifier) => {
   })
 }
 
-let findDefinitionInFiles = (identifier, uri) => {
+let findDefinitionInFiles = (identifier: string, uri: string) => {
   let locations = getDefinitionLocations(identifier)
   let importedModules = common.getImportedModules(uri)
   let legalLocations = locations.filter((loc) => {
@@ -110,7 +113,7 @@ let findDefinitionInFiles = (identifier, uri) => {
   return legalLocations[0]
 }
 
-let findDefinitionWithAliasInFiles = (identifier, alias, uri) => {
+let findDefinitionWithAliasInFiles = (identifier: string, alias: string, uri: string): Definition => {
   let locations = getDefinitionLocations(identifier)
   let importedModuleAlias = common.getImportedModuleAndAlias(uri)
 
@@ -123,7 +126,7 @@ let findDefinitionWithAliasInFiles = (identifier, alias, uri) => {
   return legalLocations[0]
 }
 
-let findDefinitionForModule = (moduleName) => {
+let findDefinitionForModule = (moduleName: string): Definition => {
   return common.getAllFilesExts(['idr', 'lidr']).map((file) => {
     let content = fs.readFileSync(file).toString()
     if (new RegExp(`(>\\s+)?module\\s+${moduleName}\\s*`, "g").test(content)) {

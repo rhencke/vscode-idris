@@ -3,13 +3,7 @@ import * as glob from "glob";
 import * as _ from "lodash";
 import * as vscode from "vscode";
 import Maybe from "../maybe"
-
-export interface Definition {
-  path: string
-  module: string
-  line: string
-  column: string
-}
+import Definition from "../Definition"
 
 export const idrisKeywords = [
   "if",
