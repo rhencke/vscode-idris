@@ -1,6 +1,6 @@
-import * as fs from "fs";
-import * as path from "path";
-import * as common from "./common";
+import * as fs from "fs"
+import * as path from "path"
+import * as common from "./common"
 import Definition from "../Definition"
 
 let findDefinitionForADTTypeAndFunctions = (contents: string[], definition: string, uri: string, moduleName: string): Definition => {

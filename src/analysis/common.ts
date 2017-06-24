@@ -1,7 +1,7 @@
-import * as fs from "fs";
-import * as glob from "glob";
-import * as _ from "lodash";
-import * as vscode from "vscode";
+import * as fs from "fs"
+import * as glob from "glob"
+import * as _ from "lodash"
+import * as vscode from "vscode"
 import Maybe from "../maybe"
 import Definition from "../Definition"
 

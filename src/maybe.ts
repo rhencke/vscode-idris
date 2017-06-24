@@ -1,7 +1,7 @@
 //http://jrsinclair.com/articles/2016/marvellously-mysterious-javascript-maybe-monad/
 
 export default class Maybe<T> {
-  private __value: T;
+  private __value: T
 
   private constructor(val: T) {
     this.__value = val
