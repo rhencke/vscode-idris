@@ -1,15 +1,15 @@
-const which = require('which')
-const IdrisModel = require('./model')
-const ipkg = require('../ipkg/ipkg')
-const vscode = require('vscode')
-const common = require('../analysis/common')
-const findDefinition = require('../analysis/find-definition')
-const Rx = require('rx-lite')
-const path = require('path')
-const Maybe = require('../maybe')
+import * as which from 'which'
+import IdrisModel from './model'
+import * as ipkg from '../ipkg/ipkg'
+import * as vscode from 'vscode'
+import * as common from '../analysis/common'
+import * as findDefinition from '../analysis/find-definition'
+import * as Rx from 'rx-lite'
+import * as path from 'path'
+import Maybe from '../maybe'
 
-let model = null
-let checkNotTotalModel = null
+let model: IdrisModel = null
+let checkNotTotalModel: IdrisModel = null
 let outputChannel = vscode.window.createOutputChannel('Idris')
 let replChannel = vscode.window.createOutputChannel('Idris REPL')
 let aproposChannel = vscode.window.createOutputChannel('Idris Apropos')
@@ -26,7 +26,7 @@ let buildCheckingStatusItem = vscode.window.createStatusBarItem(vscode.StatusBar
 
 let killIdrisCounter = 0;
 
-let init = (compilerOptions) => {
+let init = (compilerOptions: CompilerOptions): void => {
   if (compilerOptions) {
     innerCompilerOptions = compilerOptions
     model.setCompilerOptions(compilerOptions)
@@ -36,7 +36,7 @@ let init = (compilerOptions) => {
   }
 }
 
-let initialize = (compilerOptions) => {
+let initialize = (compilerOptions: CompilerOptions): void => {
   if (!model) {
     model = new IdrisModel()
   }
@@ -46,31 +46,31 @@ let initialize = (compilerOptions) => {
   init(compilerOptions)
 }
 
-let reInitialize = (compilerOptions) => {
+let reInitialize = (compilerOptions: CompilerOptions): void => {
   model = new IdrisModel()
   checkNotTotalModel = new IdrisModel()
   init(compilerOptions)
 }
 
-let getModel = () => {
+let getModel = (): IdrisModel => {
   return model
 }
 
-let showOutputChannel = (msg) => {
+let showOutputChannel = (msg: string): void => {
   outputChannel.clear()
   outputChannel.show()
   outputChannel.append(msg)
 }
 
-let clearOutputChannel = () => {
+let clearOutputChannel = (): void => {
   outputChannel.clear()
 }
 
-let showLoading = () => {
+let showLoading = (): void => {
   showOutputChannel("loading...")
 }
 
-let getCurrentPosition = () => {
+let getCurrentPosition = (): [vscode.TextDocument, vscode.Position] => {
   let editor = vscode.window.activeTextEditor
   let document = editor.document
   if (document.isDirty) {
@@ -82,7 +82,7 @@ let getCurrentPosition = () => {
   return [document, position]
 }
 
-let getWordBase = (document, position, isHover) => {
+let getWordBase = (document: vscode.TextDocument, position: vscode.Position, isHover: boolean): [string, vscode.Range] | [null, null] => {
   let wordRange = document.getWordRangeAtPosition(position, /'?\w+(\.\w+)?'?/i)
   let currentWord = document.getText(wordRange)
   if (currentWord.match(/\r|\n| /g)) {
@@ -96,7 +96,7 @@ let getWordBase = (document, position, isHover) => {
   }
 }
 
-let getWord = () => {
+let getWord = (): string | null => {
   let [document, position] = getCurrentPosition()
   return getWordBase(document, position, false)[0]
 }
@@ -104,7 +104,7 @@ let getWord = () => {
 /**
  * Get the column of the first character of a concrete line of code
  */
-let getStartColumn = (line) => {
+let getStartColumn = (line: number): number => {
   return Maybe.of(vscode.window.activeTextEditor).map((editor) => {
     let document = editor.document
 
@@ -117,16 +117,16 @@ let getStartColumn = (line) => {
   }).getOrElse(0)
 }
 
-let clearTotalityDiagnostics = () => {
+let clearTotalityDiagnostics = (): void => {
   nonTotalDiagnosticCollection.clear()
   buildDiagnosticCollection.clear()
 }
 
-let checkTotality = (uri) => {
+let checkTotality = (uri: string): void => {
   let moduleName = common.getModuleName(uri)
   if (!moduleName) return
 
-  let nonTotalDianostics = []
+  let nonTotalDianostics: Array<[vscode.Uri, [vscode.Diagnostic]]> = []
 
   new Promise((resolve, _reject) => {
     checkNotTotalModel.load(uri).filter((arg) => {
@@ -138,7 +138,7 @@ let checkTotality = (uri) => {
         return checkNotTotalModel.getDocs(a[0].split(":")[0].trim())
       })
 
-      return Rx.Observable.zip(docs)
+      return Rx.Observable.of(...docs)
     }).subscribe((docs) => {
       docs.forEach((doc) => {
         let infoMsg = doc.msg[0].replace(/\n    \n    /g, "").replace(/\n        \n        /g, "")
@@ -170,13 +170,13 @@ let checkTotality = (uri) => {
   })
 }
 
-let buildIPKG = (uri) => {
+let buildIPKG = (uri: string): void => {
   let ipkgFile = common.getAllFiles("ipkg")[0]
   if (!ipkgFile) return
 
   let reg = new RegExp("\\" + path.sep, "g")
   let dir = model.getDirectory(uri).replace(reg, "/")
-  let buildDiagnostics = []
+  let buildDiagnostics: [vscode.Uri, [vscode.Diagnostic]][] = []
 
   new Promise((resolve, _reject) => {
     model.build(ipkgFile).subscribe((ret) => {
@@ -210,11 +210,11 @@ let buildIPKG = (uri) => {
   })
 }
 
-let typecheckFile = (uri) => {
+let typecheckFile = (uri: vscode.Uri) => {
   let needShowOC = vscode.workspace.getConfiguration('idris').get('showOutputWhenTypechecking')
   let limit = vscode.workspace.getConfiguration('idris').get('numbersOfContinuousTypechecking')
 
-  let successHandler = (_) => {
+  let successHandler = (_: any) => {
     if (needShowOC) {
       outputChannel.clear()
       outputChannel.show()
@@ -232,7 +232,7 @@ let typecheckFile = (uri) => {
   }
 
   new Promise((resolve, _reject) => {
-    model.load(uri).filter((arg) => {
+    model.load(uri.toString()).filter((arg) => {
       return arg.responseType === 'return'
     }).subscribe(successHandler, (err) => {
       if (killIdrisCounter < limit) {
@@ -260,7 +260,7 @@ let cmdMsgs = {
   definition: 'Definition of'
 }
 
-let getInfoForWord = (uri, cmd) => {
+let getInfoForWord = (uri: string, cmd: 'type' | 'docs' | 'definition') => {
   let currentWord = getWord()
   if (!currentWord) return
 

@@ -37,6 +37,3 @@ export let formatSexp = function(sexp: sexp): string {
     return sexp.toString()
   }
 }
-
-type sexp = string | number | boolean | list
-interface list extends Array<sexp> { }

@@ -34,12 +34,6 @@ export let findIpkgFile = (directory: string): Rx.Observable<FileInfo[]> => {
   })
 }
 
-interface CompilerOptions {
-  options?: string
-  pkgs: string[]
-  src: string
-}
-
 let parseIpkgFile = (fileInfo: FileInfo): ((fileContents: string) => CompilerOptions) => {
   return (fileContents) => {
     let optionsMatches = fileContents.match(optionsRegexp)

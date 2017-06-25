@@ -1,17 +1,17 @@
-const formatter    = require('../wire/formatter')
-const parser       = require('../wire/parser')
-const IdrisProcessBase = require('./idris-process-base')
+import * as formatter from '../wire/formatter'
+import * as parser from '../wire/parser'
+import IdrisProcessBase from './idris-process-base'
 
-class IdrisIdeMode extends IdrisProcessBase {
+export default class IdrisIdeMode extends IdrisProcessBase {
   constructor() {
     super(['--ide-mode'], false)
   }
 
-  send(cmd) {
+  send(cmd: sexp) {
     return this.process.stdin.write(formatter.serialize(cmd))
   }
 
-  stdout(data) {
+  stdout(data: string): void {
     this.buffer += data
     while (this.buffer.length > 6) {
       this.buffer = this.buffer.trimLeft().replace(/\r\n/g, "\n")
@@ -27,5 +27,3 @@ class IdrisIdeMode extends IdrisProcessBase {
     }
   }
 }
-
-module.exports = IdrisIdeMode
