@@ -17,8 +17,8 @@ let tcDiagnosticCollection = vscode.languages.createDiagnosticCollection("Typech
 // Acutally build diagnostic also deal with the non totality warnings
 let buildDiagnosticCollection = vscode.languages.createDiagnosticCollection("Build Diagnostic")
 let nonTotalDiagnosticCollection = vscode.languages.createDiagnosticCollection("Non-total Diagnostic")
-let term = null
-let innerCompilerOptions
+let term: vscode.Terminal = null
+let innerCompilerOptions: CompilerOptions
 let needDestroy = true
 let typeCheckingStatusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -1)
 let totalityCheckingStatusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, -2)
@@ -210,7 +210,7 @@ let buildIPKG = (uri: string): void => {
   })
 }
 
-let typecheckFile = (uri: vscode.Uri) => {
+let typecheckFile = (uri: vscode.Uri): void => {
   let needShowOC = vscode.workspace.getConfiguration('idris').get('showOutputWhenTypechecking')
   let limit = vscode.workspace.getConfiguration('idris').get('numbersOfContinuousTypechecking')
 
@@ -260,11 +260,11 @@ let cmdMsgs = {
   definition: 'Definition of'
 }
 
-let getInfoForWord = (uri: string, cmd: 'type' | 'docs' | 'definition') => {
+let getInfoForWord = (uri: string, cmd: 'type' | 'docs' | 'definition'): void => {
   let currentWord = getWord()
   if (!currentWord) return
 
-  let successHandler = (arg) => {
+  let successHandler = (arg: response<ideDoc>): void => {
     let info = arg.msg[0]
     //let highlightingInfo = arg.msg[1]
     outputChannel.clear()
@@ -295,20 +295,20 @@ let getInfoForWord = (uri: string, cmd: 'type' | 'docs' | 'definition') => {
   })
 }
 
-let typeForWord = (uri) => {
+let typeForWord = (uri: string): void => {
   getInfoForWord(uri, 'type')
 }
 
-let docsForWord = (uri) => {
+let docsForWord = (uri: string): void => {
   getInfoForWord(uri, 'docs')
 }
 
-let printDefinition = (uri) => {
+let printDefinition = (uri: string): void => {
   getInfoForWord(uri, 'definition')
 }
 
-let showHoles = (uri) => {
-  let successHandler = (arg) => {
+let showHoles = (uri: string): void => {
+  let successHandler = (arg: response<ideMetavariables>) => {
     let holes = arg.msg[0]
     let hs = holes.map(([name, premises, [type, _]]) => {
       let ps = premises.map(([name, type, _]) => {
@@ -338,7 +338,7 @@ let showHoles = (uri) => {
   })
 }
 
-let idrisAscii = (version) => {
+let idrisAscii = (version: string): string[] => {
   return [
     "    ____    __     _",
     "   /  _/___/ /____(_)____",
@@ -349,12 +349,12 @@ let idrisAscii = (version) => {
   ]
 }
 
-let evalSelection = (uri) => {
+let evalSelection = (uri: string) => {
   let editor = vscode.window.activeTextEditor
   let selection = editor.selection
   let text = editor.document.getText(selection)
 
-  let successHandler = (arg) => {
+  let successHandler = (arg: response<ideDoc>) => {
     let result = arg.msg[0]
     //let highlightingInfo = arg.msg[1]
 
@@ -386,7 +386,7 @@ let evalSelection = (uri) => {
 }
 
 let createIdrisTerm = () => {
-  const pathToIdris = vscode.workspace.getConfiguration('idris').get('executablePath')
+  const pathToIdris = vscode.workspace.getConfiguration('idris').get<string>('executablePath')
   const idrisPath = which.sync(pathToIdris)
   const pkgOpts = ipkg.getPkgOpts(innerCompilerOptions)
   term = vscode.window.createTerminal("Idris REPL", idrisPath, pkgOpts)
@@ -394,7 +394,7 @@ let createIdrisTerm = () => {
   return term
 }
 
-let startup = (uri) => {
+let startup = (uri: string) => {
   let term = createIdrisTerm()
 
   if (innerCompilerOptions.src && uri.includes(innerCompilerOptions.src)) {
@@ -406,7 +406,7 @@ let startup = (uri) => {
   term.show()
 }
 
-let toggleTerm = (action, arg) => {
+let toggleTerm = <T>(action: (value: T) => void, arg: T) => {
   if (term == null) {
     action(arg)
   } else {
@@ -418,7 +418,7 @@ let toggleTerm = (action, arg) => {
 
 let search = (_) => {
   vscode.window.showInputBox({ prompt: 'Type signature' }).then(sig => {
-    let searchInTerm = (sig) => {
+    let searchInTerm = (sig: string): void => {
       let term = createIdrisTerm()
 
       term.sendText(`:search ${sig}`)
@@ -428,11 +428,11 @@ let search = (_) => {
   })
 }
 
-let startREPL = (uri) => {
+let startREPL = (uri: string): void => {
   toggleTerm(startup, uri)
 }
 
-let sendREPL = (uri) => {
+let sendREPL = (uri: string): void => {
   let editor = vscode.window.activeTextEditor
   let selection = editor.selection
   let text = editor.document.getText(selection)
@@ -445,13 +445,13 @@ let sendREPL = (uri) => {
   term.sendText(text)
 }
 
-let addClause = (uri) => {
+let addClause = (uri: string) => {
   let currentWord = getWord()
   if (!currentWord) return
   let editor = vscode.window.activeTextEditor
   let line = editor.selection.active.line
 
-  let successHandler = (arg) => {
+  let successHandler = (arg: string) => {
     let clause = arg.msg[0] + "\n"
     editor.edit((edit) => {
       edit.insert(new vscode.Position(line + 1, 0), line + 1 == editor.document.lineCount ? "\n" + clause : clause)
@@ -474,13 +474,13 @@ let addClause = (uri) => {
   })
 }
 
-let addProofClause = (uri) => {
+let addProofClause = (uri: string) => {
   let currentWord = getWord()
   if (!currentWord) return
   let editor = vscode.window.activeTextEditor
   let line = editor.selection.active.line
 
-  let successHandler = (arg) => {
+  let successHandler = (arg: response<sexp>) => {
     let clause = arg.msg[0] + "\n"
     editor.edit((edit) => {
       edit.insert(new vscode.Position(line + 1, 0), line + 1 == editor.document.lineCount ? "\n" + clause : clause)

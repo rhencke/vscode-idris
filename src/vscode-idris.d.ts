@@ -11,14 +11,47 @@ interface response<T> {
   msg: T
 }
 
-interface ideVersion {
+interface ideAddClause extends list {
+  /** The initial pattern-match clause for the function declared. */
+  [0]: string
+}
+
+interface ideVersion extends list {
+  /** An array with this as its only value for some reason. */
+  [0]: ideVersionInner
+}
+
+interface ideVersionInner extends list {
   /** Version number in list format, e.g., [major, minor] */
   [0]: number[]
   /** Mysterious extra empty list with unknown purpose? */
   [1]: list
 }
 
-interface ideDoc {
+interface ideMetavariables extends list {
+  /** An array of 'holes' with associated information. */
+  [0]: ideMetavariable[]
+}
+
+interface ideMetavariable extends list {
+  /** The qualified name of the metavariable. */
+  [0]: string
+  /** A list of premises for the metavariable. */
+  [1]: idePremises[]
+  /** A set of descriptions for the metavariable, in the form of text ranges and metadata. */
+  [2]: ideRangeDescription[]
+}
+
+interface idePremises extends list {
+  /** name */
+  [0]: string
+  /** type */
+  [1]: string
+  /** ??? */
+  [2]: any
+}
+
+interface ideDoc extends list {
   /** An identifier and its type signature. */
   [0]: string
   /** A set of descriptions for the identifier and type signature, in the form of text ranges and metadata. */
@@ -26,12 +59,12 @@ interface ideDoc {
 }
 
 /** A response from Idris's IDE protocol when queried with :browse-namespace */
-interface ideBrowseNamespace {
+interface ideBrowseNamespace extends list {
   /** An array with this as its only value for some reason. */
   [0]: ideBrowseNamespaceInner
 }
 
-interface ideBrowseNamespaceInner {
+interface ideBrowseNamespaceInner extends list {
   /** A list of namespaces available beneath this namespace. */
   [0]: string[],
   /** A list of names available in this namespace, and their descriptions. */
@@ -39,7 +72,7 @@ interface ideBrowseNamespaceInner {
 }
 
 /** A description of a range of text comprised of the start character position, the end character position, and an array of metadata that applies to said range. */
-interface ideRangeDescription {
+interface ideRangeDescription extends list {
   /** The starting character position of the text range */
   [0]: number
   /** The ending character position of the text range */
@@ -49,7 +82,7 @@ interface ideRangeDescription {
 }
 
 /** An array of key-value pairs, each in the form [":key", "value"].  The value may be any type. */
-interface ideMetadata {
+interface ideMetadata extends list {
   /** The key identifying this property.
    * @see http://docs.idris-lang.org/en/latest/reference/ide-protocol.html#output-highlighting
    */

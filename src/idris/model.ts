@@ -47,10 +47,12 @@ export default class IdrisModel {
   }
 
   prepareCommand(cmd: [':proof-search', number, string, list]): Rx.Subject<response<sexp>> /* todo */
-  prepareCommand(cmd: [':add-clause' | ':add-proof-clause' | ':case-split' | ':make-with' | ':make-lemma' | ':make-case', number, string]): Rx.Subject<response<sexp>> /* todo */
+  prepareCommand(cmd: [':add-proof-clause' | ':case-split' | ':make-with' | ':make-lemma' | ':make-case', number, string]): Rx.Subject<response<sexp>> /* todo */
+  prepareCommand(cmd: [':add-clause', number, string]): Rx.Subject<response<ideAddClause>>
   prepareCommand(cmd: ':version'): Rx.Subject<response<ideVersion>> /* todo */
-  prepareCommand(cmd: [':interpret' | ':apropos' | ':repl-completions', string]): Rx.Subject<response<sexp>> /* todo */
-  prepareCommand(cmd: [':metavariables', number]): Rx.Subject<response<sexp>> /* todo */
+  prepareCommand(cmd: [':interpret', string]): Rx.Subject<response<ideDoc>>
+  prepareCommand(cmd: [':apropos' | ':repl-completions', string]): Rx.Subject<response<sexp>> /* todo */
+  prepareCommand(cmd: [':metavariables', number]): Rx.Subject<response<ideMetavariables>>
   prepareCommand(cmd: [':load-file', string]): Rx.Subject<response<list>> /* empty list response */
   prepareCommand(cmd: [':type-of' | ':docs-for' | ':print-definition', string]): Rx.Subject<response<ideDoc>>
   prepareCommand(cmd: [':browse-namespace', string]): Rx.Subject<response<ideBrowseNamespace>>
@@ -171,7 +173,7 @@ export default class IdrisModel {
     return this.prepareCommand([':print-definition', name])
   }
 
-  interpret(code: string): Rx.Subject<response<sexp>> {
+  interpret(code: string): Rx.Subject<response<ideDoc>> {
     return this.prepareCommand([':interpret', code])
   }
 
@@ -179,11 +181,11 @@ export default class IdrisModel {
     return this.prepareCommand(':version')
   }
 
-  holes(width: number): Rx.Subject<response<sexp>> {
+  holes(width: number): Rx.Subject<response<ideMetavariables>> {
     return this.prepareCommand([':metavariables', width])
   }
 
-  addClause(line: number, word: string): Rx.Subject<response<sexp>> {
+  addClause(line: number, word: string): Rx.Subject<response<ideAddClause>> {
     return this.prepareCommand([':add-clause', line, word])
   }
 
