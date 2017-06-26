@@ -33,7 +33,7 @@ unicodeMap.set("\\phi", "ϕ")
 
 let identList: string[]
 // cache previous completion items when successfully typechecking file
-let lastReplCompletionItems = []
+let lastReplCompletionItems: vscode.CompletionItem[] = []
 
 let buildCompletionList = (): void => {
   const identSet = new Set<string>()
@@ -69,7 +69,7 @@ let IdrisCompletionProvider = (function () {
     return item
   })
 
-  IdrisCompletionProvider.prototype.provideCompletionItems = (document: vscode.TextDocument, position, _token) => {
+  IdrisCompletionProvider.prototype.provideCompletionItems = (document: vscode.TextDocument, position: vscode.Position, _token: any) => {
     let wordRange = document.getWordRangeAtPosition(position, /(\\)?'?\w+(\.\w+)?'?/i)
     let currentWord = document.getText(wordRange).trim()
     let currentLine = document.lineAt(position)
@@ -104,19 +104,19 @@ let IdrisCompletionProvider = (function () {
           return getUnicodeCompletion(currentWord, wordRange)
         } else {
           return new Promise((resolve, _reject) => {
-            controller.withCompilerOptions((uri) => {
-              commands.getModel().load(uri).flatMap((tcResult) => {
+            controller.withCompilerOptions((uri: string) => {
+              commands.getModel().load(uri).flatMap((tcResult): Rx.Observable<ideReplCompletionResponse> => {
                 if (tcResult.responseType == "return") {
                   return commands.getModel().replCompletions(trimmedPrefix)
                 } else {
-                  return Rx.Observable.of(false)
+                  return Rx.Observable.of(null)
                 }
               }).subscribe((arg) => {
                 resolve(arg)
               }, (_err) => {
               })
             })
-          }).then(function (arg) {
+          }).then(function (arg: ideReplCompletionResponse) {
             if (arg) {
               let ref = arg.msg[0][0]
               let results = ref.map((v, _i, _arr) => {
@@ -127,7 +127,7 @@ let IdrisCompletionProvider = (function () {
                 .concat(snippetItems)
                 .concat(completionUtil.idrisKeywordCompletionItems(trimmedPrefix))
 
-              if (/^(>\s+)?import/g.test(currentLine)) {
+              if (/^(>\s+)?import/g.test(currentLine.text)) {
                 let finalItems = baseItems.concat(completionUtil.getModuleNameCompletionItems(trimmedPrefix))
                 lastReplCompletionItems = finalItems
                 return finalItems

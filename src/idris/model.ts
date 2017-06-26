@@ -49,7 +49,7 @@ export default class IdrisModel {
   prepareCommand(cmd: [':apropos', string]): Rx.Subject<ideDocResponse>
   prepareCommand(cmd: [':add-clause', number, string]): Rx.Subject<ideAddClauseResponse>
   prepareCommand(cmd: [':add-proof-clause', number, string]): Rx.Subject<ideResponse<sexp>> /* todo */
-  prepareCommand(cmd: [':repl-completions', string]): Rx.Subject<ideResponse<sexp>> /* todo */
+  prepareCommand(cmd: [':repl-completions', string]): Rx.Subject<ideReplCompletionResponse>
   prepareCommand(cmd: [':browse-namespace', string]): Rx.Subject<ideBrowseNamespaceResponse>
   prepareCommand(cmd: [':case-split', number, string]): Rx.Subject<ideCaseSplitResponse>
   prepareCommand(cmd: [':docs-for', string]): Rx.Subject<ideDocResponse>
@@ -224,7 +224,7 @@ export default class IdrisModel {
     return this.prepareCommand([':apropos', name])
   }
 
-  replCompletions(word: string): Rx.Subject<ideResponse<sexp>> {
+  replCompletions(word: string): Rx.Subject<ideReplCompletionResponse> {
     return this.prepareCommand([':repl-completions', word])
   }
 

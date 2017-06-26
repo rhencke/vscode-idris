@@ -71,6 +71,25 @@ interface ideReplaceMetavariableSexp extends list {
   [1]: string
 }
 
+interface ideReplCompletionResponse extends ideResponse<ideReplCompletion> {}
+interface ideReplCompletion extends list {
+  /** A list with its sole value as the completion data. */
+  [0]: ideReplCompletionInner
+}
+interface ideReplCompletionInner extends list {
+  /** A list of suggested completions. */
+  [0]: string[]
+  /** The text the completion should be appended to.  For example, if completion
+   * is invoked at the | mark below:
+   * ```
+   * main = putStr|
+   * ```
+   * then a possible completion would be `putStrLn`, and the prefix text this
+   * variable holds would be `main = `
+   */
+  [1]: string
+}
+
 interface ideMakeWithResponse extends ideResponse<ideMakeWithSexp> {}
 interface ideMakeWithSexp extends list {
   /** A with-rule pattern match template for the clause of the function. */
