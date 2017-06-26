@@ -13,10 +13,10 @@ let checkNotTotalModel: IdrisModel = null
 let outputChannel = vscode.window.createOutputChannel('Idris')
 let replChannel = vscode.window.createOutputChannel('Idris REPL')
 let aproposChannel = vscode.window.createOutputChannel('Idris Apropos')
-let tcDiagnosticCollection = vscode.languages.createDiagnosticCollection("Typechecking Diagnostic")
+export let tcDiagnosticCollection = vscode.languages.createDiagnosticCollection("Typechecking Diagnostic")
 // Acutally build diagnostic also deal with the non totality warnings
-let buildDiagnosticCollection = vscode.languages.createDiagnosticCollection("Build Diagnostic")
-let nonTotalDiagnosticCollection = vscode.languages.createDiagnosticCollection("Non-total Diagnostic")
+export let buildDiagnosticCollection = vscode.languages.createDiagnosticCollection("Build Diagnostic")
+export let nonTotalDiagnosticCollection = vscode.languages.createDiagnosticCollection("Non-total Diagnostic")
 let term: vscode.Terminal = null
 let innerCompilerOptions: CompilerOptions
 let needDestroy = true
@@ -36,7 +36,7 @@ let init = (compilerOptions: CompilerOptions): void => {
   }
 }
 
-let initialize = (compilerOptions: CompilerOptions): void => {
+export let initialize = (compilerOptions: CompilerOptions): void => {
   if (!model) {
     model = new IdrisModel()
   }
@@ -46,23 +46,23 @@ let initialize = (compilerOptions: CompilerOptions): void => {
   init(compilerOptions)
 }
 
-let reInitialize = (compilerOptions: CompilerOptions): void => {
+export let reInitialize = (compilerOptions: CompilerOptions): void => {
   model = new IdrisModel()
   checkNotTotalModel = new IdrisModel()
   init(compilerOptions)
 }
 
-let getModel = (): IdrisModel => {
+export let getModel = (): IdrisModel => {
   return model
 }
 
-let showOutputChannel = (msg: string): void => {
+export let showOutputChannel = (msg: string): void => {
   outputChannel.clear()
   outputChannel.show()
   outputChannel.append(msg)
 }
 
-let clearOutputChannel = (): void => {
+export let clearOutputChannel = (): void => {
   outputChannel.clear()
 }
 
@@ -82,7 +82,7 @@ let getCurrentPosition = (): [vscode.TextDocument, vscode.Position] => {
   return [document, position]
 }
 
-let getWordBase = (document: vscode.TextDocument, position: vscode.Position, isHover: boolean): [string, vscode.Range] | [null, null] => {
+export let getWordBase = (document: vscode.TextDocument, position: vscode.Position, isHover: boolean): [string, vscode.Range] | [null, null] => {
   let wordRange = document.getWordRangeAtPosition(position, /'?\w+(\.\w+)?'?/i)
   let currentWord = document.getText(wordRange)
   if (currentWord.match(/\r|\n| /g)) {
@@ -117,12 +117,12 @@ let getStartColumn = (line: number): number => {
   }).getOrElse(0)
 }
 
-let clearTotalityDiagnostics = (): void => {
+export let clearTotalityDiagnostics = (): void => {
   nonTotalDiagnosticCollection.clear()
   buildDiagnosticCollection.clear()
 }
 
-let checkTotality = (uri: string): void => {
+export let checkTotality = (uri: string): void => {
   let moduleName = common.getModuleName(uri)
   if (!moduleName) return
 
@@ -170,7 +170,7 @@ let checkTotality = (uri: string): void => {
   })
 }
 
-let buildIPKG = (uri: string): void => {
+export let buildIPKG = (uri: string): void => {
   let ipkgFile = common.getAllFiles("ipkg")[0]
   if (!ipkgFile) return
 
@@ -210,7 +210,7 @@ let buildIPKG = (uri: string): void => {
   })
 }
 
-let typecheckFile = (uri: vscode.Uri): void => {
+export let typecheckFile = (uri: vscode.Uri): void => {
   let needShowOC = vscode.workspace.getConfiguration('idris').get('showOutputWhenTypechecking')
   let limit = vscode.workspace.getConfiguration('idris').get('numbersOfContinuousTypechecking')
 
@@ -295,19 +295,19 @@ let getInfoForWord = (uri: string, cmd: 'type' | 'docs' | 'definition'): void =>
   })
 }
 
-let typeForWord = (uri: string): void => {
+export let typeForWord = (uri: string): void => {
   getInfoForWord(uri, 'type')
 }
 
-let docsForWord = (uri: string): void => {
+export let docsForWord = (uri: string): void => {
   getInfoForWord(uri, 'docs')
 }
 
-let printDefinition = (uri: string): void => {
+export let printDefinition = (uri: string): void => {
   getInfoForWord(uri, 'definition')
 }
 
-let showHoles = (uri: string): void => {
+export let showHoles = (uri: string): void => {
   let successHandler = (arg: ideMetavariablesResponse) => {
     let holes = arg.msg[0]
     let hs = holes.map(([name, premises, [type, _]]) => {
@@ -349,7 +349,7 @@ let idrisAscii = (version: string): string[] => {
   ]
 }
 
-let evalSelection = (uri: string) => {
+export let evalSelection = (uri: string) => {
   let editor = vscode.window.activeTextEditor
   let selection = editor.selection
   let text = editor.document.getText(selection)
@@ -416,7 +416,7 @@ let toggleTerm = <T>(action: (value: T) => void, arg: T): void => {
   }
 }
 
-let search = (_: any) => {
+export let search = (_: any): void => {
   vscode.window.showInputBox({ prompt: 'Type signature' }).then(sig => {
     let searchInTerm = (sig: string): void => {
       let term = createIdrisTerm()
@@ -428,11 +428,11 @@ let search = (_: any) => {
   })
 }
 
-let startREPL = (uri: string): void => {
+export let startREPL = (uri: string): void => {
   toggleTerm(startup, uri)
 }
 
-let sendREPL = (uri: string): void => {
+export let sendREPL = (uri: string): void => {
   let editor = vscode.window.activeTextEditor
   let selection = editor.selection
   let text = editor.document.getText(selection)
@@ -445,7 +445,7 @@ let sendREPL = (uri: string): void => {
   term.sendText(text)
 }
 
-let addClause = (uri: string): void => {
+export let addClause = (uri: string): void => {
   let currentWord = getWord()
   if (!currentWord) return
   let editor = vscode.window.activeTextEditor
@@ -474,7 +474,7 @@ let addClause = (uri: string): void => {
   })
 }
 
-let addProofClause = (uri: string): void => {
+export let addProofClause = (uri: string): void => {
   let currentWord = getWord()
   if (!currentWord) return
   let editor = vscode.window.activeTextEditor
@@ -503,7 +503,7 @@ let addProofClause = (uri: string): void => {
   })
 }
 
-let caseSplit = (uri: string): void => {
+export let caseSplit = (uri: string): void => {
   let currentWord = getWord()
   if (!currentWord) return
   let editor = vscode.window.activeTextEditor
@@ -534,7 +534,7 @@ let caseSplit = (uri: string): void => {
   })
 }
 
-let proofSearch = (uri: string): void => {
+export let proofSearch = (uri: string): void => {
   let currentWord = getWord()
   if (!currentWord) return
   let editor = vscode.window.activeTextEditor
@@ -567,7 +567,7 @@ let proofSearch = (uri: string): void => {
   })
 }
 
-let makeWith = (uri: string) => {
+export let makeWith = (uri: string) => {
   let currentWord = getWord()
   if (!currentWord) return
   let editor = vscode.window.activeTextEditor
@@ -598,7 +598,7 @@ let makeWith = (uri: string) => {
   })
 }
 
-let makeCase = (uri: string) => {
+export let makeCase = (uri: string) => {
   let currentWord = getWord()
   if (!currentWord) return
   let editor = vscode.window.activeTextEditor
@@ -629,7 +629,7 @@ let makeCase = (uri: string) => {
   })
 }
 
-let makeLemma = (uri: string): void => {
+export let makeLemma = (uri: string): void => {
   let currentWord = getWord()
   if (!currentWord) return
   let editor = vscode.window.activeTextEditor
@@ -672,9 +672,9 @@ let makeLemma = (uri: string): void => {
   })
 }
 
-let apropos = (uri: string) => {
+export let apropos = (uri: string) => {
   vscode.window.showInputBox({ prompt: 'Idris: Apropos' }).then(val => {
-    let successHandler = (arg) => {
+    let successHandler = (arg: ideDocResponse): void => {
       let result = arg.msg[0]
       //let highlightingInfo = arg.msg[1]
 
@@ -732,7 +732,7 @@ let displayErrors = (err: ideError): void => {
   }
 }
 
-let destroy = (isOnSave: boolean): void => {
+export let destroy = (isOnSave: boolean): void => {
   if (isOnSave) {
     if (model != null && needDestroy) {
       model.stop()
@@ -744,37 +744,4 @@ let destroy = (isOnSave: boolean): void => {
       checkNotTotalModel = null
     }
   }
-}
-
-module.exports = {
-  getModel,
-  tcDiagnosticCollection,
-  buildDiagnosticCollection,
-  nonTotalDiagnosticCollection,
-  initialize,
-  reInitialize,
-  typecheckFile,
-  typeForWord,
-  docsForWord,
-  printDefinition,
-  showHoles,
-  addClause,
-  addProofClause,
-  caseSplit,
-  proofSearch,
-  makeWith,
-  makeCase,
-  makeLemma,
-  apropos,
-  evalSelection,
-  destroy,
-  startREPL,
-  sendREPL,
-  getWordBase,
-  showOutputChannel,
-  clearOutputChannel,
-  buildIPKG,
-  checkTotality,
-  clearTotalityDiagnostics,
-  search
 }

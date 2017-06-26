@@ -5,7 +5,7 @@ export default class IdrisBuild extends IdrisProcessBase {
     super(["--build", ipkgFile], true)
   }
 
-  stdout(data: string) {
+  stdout(data: string): void {
     this.emit('message', data)
   }
 }
