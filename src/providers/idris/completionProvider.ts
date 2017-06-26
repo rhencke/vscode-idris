@@ -1,14 +1,13 @@
-const commands = require('../../idris/commands')
-const controller = require('../../controller')
-const common = require('../../analysis/common')
-const snippets = require('../../../snippets/idris.json')
-const completionUtil = require('../completionUtil')
-const HashMap = require('hashmap')
-const vscode = require('vscode')
-const Rx = require('rx-lite')
-const _ = require('lodash')
+import * as commands from '../../idris/commands'
+import * as controller from '../../controller'
+import * as common from '../../analysis/common'
+import * as completionUtil from '../completionUtil'
+import * as vscode from 'vscode'
+import * as Rx from 'rx-lite'
 
-const unicodeMap = new HashMap()
+const snippets = require('../../../snippets/idris.json')
+
+const unicodeMap = new Map<string, string>()
 unicodeMap.set("\\alpha", "α")
 unicodeMap.set("\\beta", "β")
 unicodeMap.set("\\gamma", "γ")
@@ -32,19 +31,22 @@ unicodeMap.set("\\psi", "ψ")
 unicodeMap.set("\\omega", "ω")
 unicodeMap.set("\\phi", "ϕ")
 
-let identList
+let identList: string[]
 // cache previous completion items when successfully typechecking file
 let lastReplCompletionItems = []
 
-let buildCompletionList = () => {
-  let idents = common.getAllFilesExts(['idr', 'lidr']).map((uri) => {
-    return common.getIdents(uri)
-  })
-  identList = _.uniqWith(_.flatten(idents), _.isEqual)
+let buildCompletionList = (): void => {
+  const identSet = new Set<string>()
+  for(const file of common.getAllFilesExts(['idr', 'lidr'])) {
+    for (const ident of common.getIdents(file)) {
+      identSet.add(ident)
+    }
+  }
+  identList = [...identSet]
 }
 
-let getUnicodeCompletion = (currentWord, wordRange) => {
-  let result = []
+let getUnicodeCompletion = (currentWord: string, wordRange: vscode.Range): vscode.CompletionItem[] => {
+  let result: vscode.CompletionItem[] = []
   unicodeMap.forEach((value, key) => {
     if (key.startsWith(currentWord)) {
       let item = new vscode.CompletionItem(key, 0)
@@ -67,7 +69,7 @@ let IdrisCompletionProvider = (function () {
     return item
   })
 
-  IdrisCompletionProvider.prototype.provideCompletionItems = (document, position, _token) => {
+  IdrisCompletionProvider.prototype.provideCompletionItems = (document: vscode.TextDocument, position, _token) => {
     let wordRange = document.getWordRangeAtPosition(position, /(\\)?'?\w+(\.\w+)?'?/i)
     let currentWord = document.getText(wordRange).trim()
     let currentLine = document.lineAt(position)
@@ -75,7 +77,7 @@ let IdrisCompletionProvider = (function () {
     let trimmedPrefix = currentWord.trim()
 
     if (trimmedPrefix.length >= 2) {
-      let suggestMode = vscode.workspace.getConfiguration('idris').get('suggestMode')
+      let suggestMode = vscode.workspace.getConfiguration('idris').get<string>('suggestMode')
 
       if (suggestMode == 'allWords') {
         if (currentWord.startsWith("\\")) {
