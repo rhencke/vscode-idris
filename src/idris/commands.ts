@@ -264,7 +264,7 @@ let getInfoForWord = (uri: string, cmd: 'type' | 'docs' | 'definition'): void =>
   let currentWord = getWord()
   if (!currentWord) return
 
-  let successHandler = (arg: response<ideDoc>): void => {
+  let successHandler = (arg: ideDocResponse): void => {
     let info = arg.msg[0]
     //let highlightingInfo = arg.msg[1]
     outputChannel.clear()
@@ -308,7 +308,7 @@ let printDefinition = (uri: string): void => {
 }
 
 let showHoles = (uri: string): void => {
-  let successHandler = (arg: response<ideMetavariables>) => {
+  let successHandler = (arg: ideMetavariablesResponse) => {
     let holes = arg.msg[0]
     let hs = holes.map(([name, premises, [type, _]]) => {
       let ps = premises.map(([name, type, _]) => {
@@ -354,7 +354,7 @@ let evalSelection = (uri: string) => {
   let selection = editor.selection
   let text = editor.document.getText(selection)
 
-  let successHandler = (arg: response<ideDoc>) => {
+  let successHandler = (arg: ideDocResponse) => {
     let result = arg.msg[0]
     //let highlightingInfo = arg.msg[1]
 
@@ -385,7 +385,7 @@ let evalSelection = (uri: string) => {
   })
 }
 
-let createIdrisTerm = () => {
+let createIdrisTerm = (): vscode.Terminal => {
   const pathToIdris = vscode.workspace.getConfiguration('idris').get<string>('executablePath')
   const idrisPath = which.sync(pathToIdris)
   const pkgOpts = ipkg.getPkgOpts(innerCompilerOptions)
@@ -394,7 +394,7 @@ let createIdrisTerm = () => {
   return term
 }
 
-let startup = (uri: string) => {
+let startup = (uri: string): void => {
   let term = createIdrisTerm()
 
   if (innerCompilerOptions.src && uri.includes(innerCompilerOptions.src)) {
@@ -406,7 +406,7 @@ let startup = (uri: string) => {
   term.show()
 }
 
-let toggleTerm = <T>(action: (value: T) => void, arg: T) => {
+let toggleTerm = <T>(action: (value: T) => void, arg: T): void => {
   if (term == null) {
     action(arg)
   } else {
@@ -416,7 +416,7 @@ let toggleTerm = <T>(action: (value: T) => void, arg: T) => {
   }
 }
 
-let search = (_) => {
+let search = (_: any) => {
   vscode.window.showInputBox({ prompt: 'Type signature' }).then(sig => {
     let searchInTerm = (sig: string): void => {
       let term = createIdrisTerm()
@@ -445,13 +445,13 @@ let sendREPL = (uri: string): void => {
   term.sendText(text)
 }
 
-let addClause = (uri: string) => {
+let addClause = (uri: string): void => {
   let currentWord = getWord()
   if (!currentWord) return
   let editor = vscode.window.activeTextEditor
   let line = editor.selection.active.line
 
-  let successHandler = (arg: string) => {
+  let successHandler = (arg: ideAddClauseResponse): void => {
     let clause = arg.msg[0] + "\n"
     editor.edit((edit) => {
       edit.insert(new vscode.Position(line + 1, 0), line + 1 == editor.document.lineCount ? "\n" + clause : clause)
@@ -474,13 +474,13 @@ let addClause = (uri: string) => {
   })
 }
 
-let addProofClause = (uri: string) => {
+let addProofClause = (uri: string): void => {
   let currentWord = getWord()
   if (!currentWord) return
   let editor = vscode.window.activeTextEditor
   let line = editor.selection.active.line
 
-  let successHandler = (arg: response<sexp>) => {
+  let successHandler = (arg: ideAddClauseResponse): void => {
     let clause = arg.msg[0] + "\n"
     editor.edit((edit) => {
       edit.insert(new vscode.Position(line + 1, 0), line + 1 == editor.document.lineCount ? "\n" + clause : clause)
@@ -503,13 +503,13 @@ let addProofClause = (uri: string) => {
   })
 }
 
-let caseSplit = (uri) => {
+let caseSplit = (uri: string): void => {
   let currentWord = getWord()
   if (!currentWord) return
   let editor = vscode.window.activeTextEditor
   let line = editor.selection.active.line
 
-  let successHandler = (arg) => {
+  let successHandler = (arg: ideCaseSplitResponse): void => {
     let split = arg.msg[0]
     editor.edit((edit) => {
       let start = new vscode.Position(line, 0)
@@ -534,7 +534,7 @@ let caseSplit = (uri) => {
   })
 }
 
-let proofSearch = (uri) => {
+let proofSearch = (uri: string): void => {
   let currentWord = getWord()
   if (!currentWord) return
   let editor = vscode.window.activeTextEditor
@@ -542,7 +542,7 @@ let proofSearch = (uri) => {
   let position = editor.selection.active
   let wordRange = editor.document.getWordRangeAtPosition(position)
 
-  let successHandler = (arg) => {
+  let successHandler = (arg: ideProofSearchResponse): void => {
     let res = arg.msg[0]
     editor.edit((edit) => {
       let start = new vscode.Position(wordRange.start.line, wordRange.start.character - 1)
@@ -567,13 +567,13 @@ let proofSearch = (uri) => {
   })
 }
 
-let makeWith = (uri) => {
+let makeWith = (uri: string) => {
   let currentWord = getWord()
   if (!currentWord) return
   let editor = vscode.window.activeTextEditor
   let line = editor.selection.active.line
 
-  let successHandler = (arg) => {
+  let successHandler = (arg: ideMakeWithResponse) => {
     let clause = arg.msg[0]
     editor.edit((edit) => {
       let start = new vscode.Position(line, 0)
@@ -598,13 +598,13 @@ let makeWith = (uri) => {
   })
 }
 
-let makeCase = (uri) => {
+let makeCase = (uri: string) => {
   let currentWord = getWord()
   if (!currentWord) return
   let editor = vscode.window.activeTextEditor
   let line = editor.selection.active.line
 
-  let successHandler = (arg) => {
+  let successHandler = (arg: ideMakeCaseResponse) => {
     let clause = arg.msg[0]
     editor.edit((edit) => {
       let start = new vscode.Position(line, 0)
@@ -629,7 +629,7 @@ let makeCase = (uri) => {
   })
 }
 
-let makeLemma = (uri) => {
+let makeLemma = (uri: string): void => {
   let currentWord = getWord()
   if (!currentWord) return
   let editor = vscode.window.activeTextEditor
@@ -637,7 +637,7 @@ let makeLemma = (uri) => {
   let position = editor.selection.active
   let wordRange = editor.document.getWordRangeAtPosition(position)
 
-  let successHandler = (arg) => {
+  let successHandler = (arg: ideMakeLemmaResponse): void => {
     let lemty = arg.msg[0]
     let param1 = arg.msg[1]
     let param2 = arg.msg[2]
@@ -672,7 +672,7 @@ let makeLemma = (uri) => {
   })
 }
 
-let apropos = (uri) => {
+let apropos = (uri: string) => {
   vscode.window.showInputBox({ prompt: 'Idris: Apropos' }).then(val => {
     let successHandler = (arg) => {
       let result = arg.msg[0]
@@ -699,14 +699,14 @@ let apropos = (uri) => {
   })
 }
 
-let displayErrors = (err) => {
+let displayErrors = (err: ideError): void => {
   replChannel.clear()
   aproposChannel.clear()
   outputChannel.clear()
   outputChannel.show()
   tcDiagnosticCollection.clear()
-  let buf = []
-  let diagnostics = []
+  let buf: string[] = []
+  let diagnostics: [vscode.Uri, [vscode.Diagnostic]][] = []
   if (err.warnings) {
     let len = err.warnings.length
     buf.push("Errors (" + len + ")")
@@ -732,7 +732,7 @@ let displayErrors = (err) => {
   }
 }
 
-let destroy = (isOnSave) => {
+let destroy = (isOnSave: boolean): void => {
   if (isOnSave) {
     if (model != null && needDestroy) {
       model.stop()

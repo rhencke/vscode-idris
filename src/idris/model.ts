@@ -8,8 +8,8 @@ export default class IdrisModel {
   ideModeRef: IdrisIdeMode = null
   idrisBuildRef: IdrisBuild = null
   idrisReplRef: any = null
-  subjects: {[index:number]: Rx.Subject<response<sexp>>} = {}
-  warnings: {[index:number]: Array<any>} = {}
+  subjects: {[index:number]: Rx.Subject<ideResponse<sexp>>} = {}
+  warnings: {[index:number]: ideWarningSexp[]} = {}
   idrisBuildSubject: Rx.Subject<string> = null
   idrisReplSubject: any = null
   compilerOptions: CompilerOptions = {}
@@ -22,7 +22,7 @@ export default class IdrisModel {
     // outdated options, so that it can be restarted.
     if (!this.ideModeRef) {
       this.ideModeRef = new IdrisIdeMode()
-      this.ideModeRef.on('message', (obj) => { this.handleIdeModeCommand(obj) })
+      this.ideModeRef.on('message', (obj: list) => { this.handleIdeModeCommand(obj) })
       this.ideModeRef.start(compilerOptions)
     }
     return this.ideModeRef
@@ -46,19 +46,26 @@ export default class IdrisModel {
     this.compilerOptions = options
   }
 
-  prepareCommand(cmd: [':proof-search', number, string, list]): Rx.Subject<response<sexp>> /* todo */
-  prepareCommand(cmd: [':add-proof-clause' | ':case-split' | ':make-with' | ':make-lemma' | ':make-case', number, string]): Rx.Subject<response<sexp>> /* todo */
-  prepareCommand(cmd: [':add-clause', number, string]): Rx.Subject<response<ideAddClause>>
-  prepareCommand(cmd: ':version'): Rx.Subject<response<ideVersion>> /* todo */
-  prepareCommand(cmd: [':interpret', string]): Rx.Subject<response<ideDoc>>
-  prepareCommand(cmd: [':apropos' | ':repl-completions', string]): Rx.Subject<response<sexp>> /* todo */
-  prepareCommand(cmd: [':metavariables', number]): Rx.Subject<response<ideMetavariables>>
-  prepareCommand(cmd: [':load-file', string]): Rx.Subject<response<list>> /* empty list response */
-  prepareCommand(cmd: [':type-of' | ':docs-for' | ':print-definition', string]): Rx.Subject<response<ideDoc>>
-  prepareCommand(cmd: [':browse-namespace', string]): Rx.Subject<response<ideBrowseNamespace>>
-  prepareCommand<T extends sexp>(cmd: sexp): Rx.Subject<response<T>> {
+  prepareCommand(cmd: [':apropos', string]): Rx.Subject<ideDocResponse>
+  prepareCommand(cmd: [':add-clause', number, string]): Rx.Subject<ideAddClauseResponse>
+  prepareCommand(cmd: [':add-proof-clause', number, string]): Rx.Subject<ideResponse<sexp>> /* todo */
+  prepareCommand(cmd: [':repl-completions', string]): Rx.Subject<ideResponse<sexp>> /* todo */
+  prepareCommand(cmd: [':browse-namespace', string]): Rx.Subject<ideBrowseNamespaceResponse>
+  prepareCommand(cmd: [':case-split', number, string]): Rx.Subject<ideCaseSplitResponse>
+  prepareCommand(cmd: [':docs-for', string]): Rx.Subject<ideDocResponse>
+  prepareCommand(cmd: [':interpret', string]): Rx.Subject<ideDocResponse>
+  prepareCommand(cmd: [':load-file', string]): Rx.Subject<ideResponse<list>> /* empty list response */
+  prepareCommand(cmd: [':make-case', number, string]): Rx.Subject<ideMakeCaseResponse>
+  prepareCommand(cmd: [':make-lemma', number, string]): Rx.Subject<ideMakeLemmaResponse>
+  prepareCommand(cmd: [':make-with', number, string]): Rx.Subject<ideMakeWithResponse>
+  prepareCommand(cmd: [':metavariables', number]): Rx.Subject<ideMetavariablesResponse>
+  prepareCommand(cmd: [':print-definition', string]): Rx.Subject<ideDocResponse>
+  prepareCommand(cmd: [':proof-search', number, string, list]): Rx.Subject<ideProofSearchResponse>
+  prepareCommand(cmd: [':type-of', string]): Rx.Subject<ideDocResponse>
+  prepareCommand(cmd: ':version'): Rx.Subject<ideVersionResponse>
+  prepareCommand<T extends sexp>(cmd: sexp): Rx.Subject<ideResponse<T>> {
     let id = this.getUID()
-    let subject = new Rx.Subject<response<T>>()
+    let subject = new Rx.Subject<ideResponse<T>>()
     this.subjects[id] = subject
     this.warnings[id] = []
     this.ideMode(this.compilerOptions).send([cmd, id])
@@ -115,7 +122,7 @@ export default class IdrisModel {
             })
             break
           case ':warning':
-            let warning = params[0]
+            let warning = params[0] as ideWarningSexp
             this.warnings[id].push(warning)
             break
           case ':set-prompt':
@@ -125,7 +132,7 @@ export default class IdrisModel {
     }
   }
 
-  changeDirectory(dir: string): Rx.Subject<response<sexp>> {
+  changeDirectory(dir: string): Rx.Subject<ideResponse<sexp>> {
     return this.interpret(`:cd ${dir}`)
   }
 
@@ -143,7 +150,7 @@ export default class IdrisModel {
     return this.idrisBuildSubject
   }
 
-  load(uri: string): Rx.Observable<response<list>> {
+  load(uri: string): Rx.Observable<ideResponse<list>> {
     let dir = this.getDirectory(uri)
     let cd
 
@@ -161,63 +168,63 @@ export default class IdrisModel {
     })
   }
 
-  getType(word: string): Rx.Subject<response<ideDoc>> {
+  getType(word: string): Rx.Subject<ideDocResponse> {
     return this.prepareCommand([':type-of', word])
   }
 
-  getDocs(word: string): Rx.Subject<response<ideDoc>> {
+  getDocs(word: string): Rx.Subject<ideDocResponse> {
     return this.prepareCommand([':docs-for', word])
   }
 
-  printDefinition(name: string): Rx.Subject<response<ideDoc>> {
+  printDefinition(name: string): Rx.Subject<ideDocResponse> {
     return this.prepareCommand([':print-definition', name])
   }
 
-  interpret(code: string): Rx.Subject<response<ideDoc>> {
+  interpret(code: string): Rx.Subject<ideDocResponse> {
     return this.prepareCommand([':interpret', code])
   }
 
-  getVersion(): Rx.Subject<response<ideVersion>> {
+  getVersion(): Rx.Subject<ideVersionResponse> {
     return this.prepareCommand(':version')
   }
 
-  holes(width: number): Rx.Subject<response<ideMetavariables>> {
+  holes(width: number): Rx.Subject<ideMetavariablesResponse> {
     return this.prepareCommand([':metavariables', width])
   }
 
-  addClause(line: number, word: string): Rx.Subject<response<ideAddClause>> {
+  addClause(line: number, word: string): Rx.Subject<ideAddClauseResponse> {
     return this.prepareCommand([':add-clause', line, word])
   }
 
-  addProofClause(line: number, word: string): Rx.Subject<response<sexp>> {
+  addProofClause(line: number, word: string): Rx.Subject<ideResponse<sexp>> {
     return this.prepareCommand([':add-proof-clause', line, word])
   }
 
-  caseSplit(line: number, word: string): Rx.Subject<response<sexp>> {
+  caseSplit(line: number, word: string): Rx.Subject<ideCaseSplitResponse> {
     return this.prepareCommand([':case-split', line, word])
   }
 
-  proofSearch(line: number, word: string): Rx.Subject<response<sexp>> {
+  proofSearch(line: number, word: string): Rx.Subject<ideProofSearchResponse> {
     return this.prepareCommand([':proof-search', line, word, []])
   }
 
-  makeWith(line: number, word: string): Rx.Subject<response<sexp>> {
+  makeWith(line: number, word: string): Rx.Subject<ideMakeWithResponse> {
     return this.prepareCommand([':make-with', line, word])
   }
 
-  makeLemma(line: number, word: string): Rx.Subject<response<sexp>> {
+  makeLemma(line: number, word: string): Rx.Subject<ideResponse<sexp>> {
     return this.prepareCommand([':make-lemma', line, word])
   }
 
-  makeCase(line: number, word: string): Rx.Subject<response<sexp>> {
+  makeCase(line: number, word: string): Rx.Subject<ideMakeCaseResponse> {
     return this.prepareCommand([':make-case', line, word])
   }
 
-  apropos(name: string): Rx.Subject<response<sexp>> {
+  apropos(name: string): Rx.Subject<ideResponse<sexp>> {
     return this.prepareCommand([':apropos', name])
   }
 
-  replCompletions(word: string): Rx.Subject<response<sexp>> {
+  replCompletions(word: string): Rx.Subject<ideResponse<sexp>> {
     return this.prepareCommand([':repl-completions', word])
   }
 
