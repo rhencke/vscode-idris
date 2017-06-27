@@ -1,13 +1,11 @@
-const commands = require('../../idris/commands')
-const controller = require('../../controller')
-const common = require('../../analysis/common')
-const findDefinition = require('../../analysis/find-definition')
-const vscode = require('vscode')
+import * as commands from '../../idris/commands'
+import * as controller from '../../controller'
+import * as common from '../../analysis/common'
+import * as findDefinition from '../../analysis/find-definition'
+import * as vscode from 'vscode'
 
-let IdrisDocumentSymbolProvider = (function () {
-  function IdrisDocumentSymbolProvider() { }
-
-  IdrisDocumentSymbolProvider.prototype.provideDocumentSymbols = function (_document, _token) {
+export default class IdrisDocumentSymbolProvider implements vscode.DocumentSymbolProvider {
+  provideDocumentSymbols(_document: vscode.TextDocument, _token: vscode.CancellationToken) {
     return new Promise((resolve, _reject) => {
       controller.withCompilerOptions((uri) => {
         let moduleName = common.getModuleName(uri)
@@ -19,7 +17,7 @@ let IdrisDocumentSymbolProvider = (function () {
           return commands.getModel().browseNamespace(moduleName)
         }).subscribe(
           function (arg) {
-            let symbols = []
+            let symbols: vscode.SymbolInformation[] = []
             arg.msg[0][1].forEach((a) => {
               let name = a[0].split(":")[0].trim()
               let def = findDefinition.findDefinitionInFiles(name, uri)
@@ -44,9 +42,4 @@ let IdrisDocumentSymbolProvider = (function () {
       })
     })
   }
-  return IdrisDocumentSymbolProvider
-}())
-
-module.exports = {
-  IdrisDocumentSymbolProvider
 }

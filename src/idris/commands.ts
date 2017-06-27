@@ -210,7 +210,7 @@ export let buildIPKG = (uri: string): void => {
   })
 }
 
-export let typecheckFile = (uri: vscode.Uri): void => {
+export let typecheckFile = (uri: string): void => {
   let needShowOC = vscode.workspace.getConfiguration('idris').get('showOutputWhenTypechecking')
   let limit = vscode.workspace.getConfiguration('idris').get('numbersOfContinuousTypechecking')
 
@@ -232,7 +232,7 @@ export let typecheckFile = (uri: vscode.Uri): void => {
   }
 
   new Promise((resolve, _reject) => {
-    model.load(uri.toString()).filter((arg) => {
+    model.load(uri).filter((arg) => {
       return arg.responseType === 'return'
     }).subscribe(successHandler, (err) => {
       if (killIdrisCounter < limit) {

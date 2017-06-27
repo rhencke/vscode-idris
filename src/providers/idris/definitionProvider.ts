@@ -1,14 +1,13 @@
-const commands = require('../../idris/commands')
-const common = require('../../analysis/common')
-const findDefinition = require('../../analysis/find-definition')
-const vscode = require('vscode')
+import * as commands from '../../idris/commands'
+import * as common from '../../analysis/common'
+import * as findDefinition from '../../analysis/find-definition'
+import Definition from '../../Definition'
+import * as vscode from 'vscode'
 
-let IdrisDefinitionProvider = (function () {
-  function IdrisDefinitionProvider() { }
-
-  IdrisDefinitionProvider.prototype.provideDefinition = function (document, position, _token) {
+export default class IdrisDefinitionProvider implements vscode.DefinitionProvider {
+  provideDefinition(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.Definition> {
     let [currentWord, _wordRange] = commands.getWordBase(document, position, true)
-    if (!currentWord) return
+    if (!currentWord) return null
 
     let uri = document.uri.fsPath
     return new Promise((resolve, _reject) => {
@@ -27,7 +26,7 @@ let IdrisDefinitionProvider = (function () {
         let loc = findDefinition.findDefinitionInFiles(currentWord, uri)
         resolve(loc)
       }
-    }).then(function (loc) {
+    }).then(function (loc: Definition) {
       if (loc) {
         let pos = new vscode.Position(loc.line, loc.column)
         return new vscode.Location(vscode.Uri.file(loc.path), pos)
@@ -36,9 +35,4 @@ let IdrisDefinitionProvider = (function () {
       }
     })
   }
-  return IdrisDefinitionProvider
-}())
-
-module.exports = {
-  IdrisDefinitionProvider
 }

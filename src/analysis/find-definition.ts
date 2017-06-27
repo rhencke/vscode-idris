@@ -103,7 +103,7 @@ let getDefinitionLocations = (identifier: string) => {
   })
 }
 
-export let findDefinitionInFiles = (identifier: string, uri: string) => {
+export let findDefinitionInFiles = (identifier: string, uri: string): Definition => {
   let locations = getDefinitionLocations(identifier)
   let importedModules = common.getImportedModules(uri)
   let legalLocations = locations.filter((loc) => {

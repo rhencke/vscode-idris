@@ -58,7 +58,7 @@ let readIpkgFile = (ipkgFile: FileInfo): Rx.Observable<string> => {
   })
 }
 
-export let compilerOptions = (directory: string): Rx.Observable<CompilerOptions | any> => {
+export let compilerOptions = (directory: string): Rx.Observable<CompilerOptions> => {
   let ipkgFilesObserver = findIpkgFile(directory)
   return ipkgFilesObserver.flatMap((ipkgFiles) => {
     if (ipkgFiles.length) {

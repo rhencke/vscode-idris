@@ -1,20 +1,20 @@
-const ipkg = require('./ipkg/ipkg')
-const commands = require('./idris/commands')
-const common = require('./analysis/common')
-const vscode = require('vscode')
-const fs = require('fs')
-const cp = require('child_process')
-const path = require('path')
-const Maybe = require('./maybe')
+import * as ipkg from './ipkg/ipkg'
+import * as commands from './idris/commands'
+import * as common from './analysis/common'
+import * as vscode from 'vscode'
+import * as fs from 'fs'
+import * as cp from 'child_process'
+import * as path from 'path'
+import Maybe from './maybe'
 
-const IDRIS_MODE = [
+export const IDRIS_MODE = [
   { language: 'idris', scheme: 'file' },
   { language: 'lidris', scheme: 'file' }
 ]
 
-const IPKG_MODE = { language: 'ipkg', scheme: 'file' }
+export const IPKG_MODE = { language: 'ipkg', scheme: 'file' }
 
-let getCommands = () => {
+export let getCommands = () => {
   return [
     ['idris.typecheck', runCommand(commands.typecheckFile)],
     ['idris.type-of', runCommand(commands.typeForWord)],
@@ -38,13 +38,13 @@ let getCommands = () => {
   ]
 }
 
-let cleanupIbc = (_) => {
+let cleanupIbc = (_: any): void => {
   common.getAllFiles('ibc').forEach((file) => {
     fs.unlinkSync(file)
   })
 }
 
-let newProject = (_) => {
+let newProject = (_: any): void => {
   vscode.window.showInputBox({ prompt: 'Project name' }).then(val => {
     let result = cp.spawnSync("idrin", ["new", val], { cwd: path.resolve(common.getSafeRoot(), "../") })
     if (result.status != 0) {
@@ -60,23 +60,23 @@ let newProject = (_) => {
   })
 }
 
-let getCompilerOptsPromise = () => {
+export let getCompilerOptsPromise = (): Rx.Observable<CompilerOptions> => {
   let compilerOptions = ipkg.compilerOptions(common.getSafeRoot())
   return compilerOptions
 }
 
-let reInitialize = () => {
+export let reInitialize = (): void => {
   getCompilerOptsPromise().subscribe((compilerOptions) => {
     commands.reInitialize(compilerOptions)
   })
 }
 
-let withCompilerOptions = (callback) => {
+export let withCompilerOptions = (callback: (uri: string) => void): void => {
   Maybe.of(vscode.window.activeTextEditor).map((editor) => {
     let document = editor.document
     if (!IDRIS_MODE.map((mode) => { return mode.language }).includes(document.languageId)) return
     let uri = document.uri.fsPath
-  
+
     getCompilerOptsPromise().subscribe((compilerOptions) => {
       commands.initialize(compilerOptions)
       callback(uri)
@@ -84,7 +84,7 @@ let withCompilerOptions = (callback) => {
   })
 }
 
-let typeCheckOnSave = () => {
+export let typeCheckOnSave = (): void => {
   withCompilerOptions(commands.typecheckFile)
   commands.clearTotalityDiagnostics()
   if (vscode.workspace.getConfiguration('idris').get('warnPartial')) {
@@ -93,22 +93,12 @@ let typeCheckOnSave = () => {
   }
 }
 
-let runCommand = (command) => {
+let runCommand = (command: (uri: string) => void): (_: any) => void => {
   return (_) => {
     withCompilerOptions(command)
   }
 }
 
-module.exports = {
-  getCommands,
-  destroy: commands.destroy,
-  tcDiagnosticCollection: commands.tcDiagnosticCollection,
-  buildDiagnosticCollection: commands.buildDiagnosticCollection,
-  nonTotalDiagnosticCollection: commands.nonTotalDiagnosticCollection,
-  withCompilerOptions: withCompilerOptions,
-  typeCheckOnSave: typeCheckOnSave,
-  reInitialize: reInitialize,
-  getCompilerOptsPromise: getCompilerOptsPromise,
-  IDRIS_MODE: IDRIS_MODE,
-  IPKG_MODE: IPKG_MODE
-}
+export const tcDiagnosticCollection = commands.tcDiagnosticCollection
+export const buildDiagnosticCollection = commands.buildDiagnosticCollection
+export const nonTotalDiagnosticCollection = commands.nonTotalDiagnosticCollection
