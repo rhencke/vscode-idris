@@ -69,7 +69,7 @@ let IdrisCompletionProvider = (function () {
     return item
   })
 
-  IdrisCompletionProvider.prototype.provideCompletionItems = (document: vscode.TextDocument, position: vscode.Position, _token: any) => {
+  IdrisCompletionProvider.prototype.provideCompletionItems = (document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken) => {
     let wordRange = document.getWordRangeAtPosition(position, /(\\)?'?\w+(\.\w+)?'?/i)
     let currentWord = document.getText(wordRange).trim()
     let currentLine = document.lineAt(position)

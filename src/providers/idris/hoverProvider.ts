@@ -1,26 +1,12 @@
-const commands = require('../../idris/commands')
-const controller = require('../../controller')
-const vscode = require('vscode')
-const Rx = require('rx-lite')
+import * as commands from '../../idris/commands'
+import * as controller from '../../controller'
+import * as vscode from 'vscode'
+import * as Rx from 'rx-lite'
 
-// to determine whether range1 is inside range2
-let isRangeInsideRange = (range1, range2) => {
-  let startPred = range1.start.line > range2.start.line ||
-    (range1.start.line == range2.start.line &&
-      range1.start.character >= range2.start.character)
-  let endPred = range1.end.line < range2.end.line ||
-    (range1.end.line == range2.end.line &&
-      range1.end.character <= range2.end.character)
-
-  return startPred && endPred
-}
-
-let IdrisHoverProvider = (function () {
-  function IdrisHoverProvider() { }
-
-  IdrisHoverProvider.prototype.provideHover = function (document, position, _token) {
+export default class IdrisHoverProvider implements vscode.HoverProvider {
+  provideHover(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken): vscode.ProviderResult<vscode.Hover> {
     let [currentWord, wordRange] = commands.getWordBase(document, position, true)
-    if (!currentWord) return
+    if (!currentWord) return null
 
     return new Promise((resolve, _reject) => {
       controller.withCompilerOptions((uri) => {
@@ -28,7 +14,7 @@ let IdrisHoverProvider = (function () {
         if (commands.tcDiagnosticCollection.has(filePath)) {
           let diagnostics = commands.tcDiagnosticCollection.get(filePath)
           diagnostics.forEach((d) => {
-            if (isRangeInsideRange(wordRange, d.range)) {
+            if (d.range.contains(wordRange)) {
               resolve(null)
             }
           })
@@ -43,7 +29,7 @@ let IdrisHoverProvider = (function () {
         commands.getModel().load(uri).filter((arg) => {
           return arg.responseType === 'return'
         }).flatMap(() => {
-          return Rx.Observable.zip(commands.getModel().getType(currentWord), commands.getModel().getDocs(currentWord))
+          return Rx.Observable.zip<ideDocResponse, ideDocResponse>(commands.getModel().getType(currentWord), commands.getModel().getDocs(currentWord))
         }).subscribe(
           function (arg) {
             let typeMsg = arg[0].msg[0]
@@ -71,7 +57,7 @@ let IdrisHoverProvider = (function () {
             }
           })
       })
-    }).then(function (info) {
+    }).then(function (info: string) {
       if (info != null) {
         return new vscode.Hover({
           language: 'idris',
@@ -82,9 +68,4 @@ let IdrisHoverProvider = (function () {
       }
     })
   }
-  return IdrisHoverProvider
-}())
-
-module.exports = {
-  IdrisHoverProvider
 }

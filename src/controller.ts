@@ -38,13 +38,13 @@ export let getCommands = () => {
   ]
 }
 
-let cleanupIbc = (_: any): void => {
+let cleanupIbc = (_: {}): void => {
   common.getAllFiles('ibc').forEach((file) => {
     fs.unlinkSync(file)
   })
 }
 
-let newProject = (_: any): void => {
+let newProject = (_: {}): void => {
   vscode.window.showInputBox({ prompt: 'Project name' }).then(val => {
     let result = cp.spawnSync("idrin", ["new", val], { cwd: path.resolve(common.getSafeRoot(), "../") })
     if (result.status != 0) {
@@ -93,7 +93,7 @@ export let typeCheckOnSave = (): void => {
   }
 }
 
-let runCommand = (command: (uri: string) => void): (_: any) => void => {
+let runCommand = (command: (uri: string) => void): (_: {}) => void => {
   return (_) => {
     withCompilerOptions(command)
   }
