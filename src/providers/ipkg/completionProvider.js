@@ -15,7 +15,7 @@ let buildCompletionList = () => {
 let IPKGCompletionProvider = (function () {
   function IPKGCompletionProvider() { }
 
-  IPKGCompletionProvider.prototype.provideCompletionItems = (document, position, _token) => {
+  provideCompletionItems(document, position, _token) {
     let wordRange = document.getWordRangeAtPosition(position, /(\\)?'?\w+(\.\w+)?'?/i)
     let currentWord = document.getText(wordRange).trim()
 
@@ -34,8 +34,7 @@ let IPKGCompletionProvider = (function () {
       return null
     }
   }
-  return IPKGCompletionProvider
-}())
+}
 
 module.exports = {
   IPKGCompletionProvider,

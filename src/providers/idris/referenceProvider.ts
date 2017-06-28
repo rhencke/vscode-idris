@@ -1,15 +1,14 @@
-const commands = require('../../idris/commands')
-const common = require('../../analysis/common')
-const findDefinition = require('../../analysis/find-definition')
-const vscode = require('vscode')
-const _ = require('lodash')
+import * as commands from '../../idris/commands'
+import * as common from '../../analysis/common'
+import * as findDefinition from '../../analysis/find-definition'
+import * as vscode from 'vscode'
+import * as _ from 'lodash'
 
-let IdrisReferenceProvider = (function () {
-  function IdrisReferenceProvider() { }
 
-  IdrisReferenceProvider.prototype.provideReferences = function (document, position, _context, _token) {
+export default class IdrisReferenceProvider implements vscode.ReferenceProvider {
+  provideReferences(document: vscode.TextDocument, position: vscode.Position, context: vscode.ReferenceContext, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Location[]> {
     let [currentWord, _wordRange] = commands.getWordBase(document, position, true)
-    if (!currentWord) return
+    if (!currentWord) return null
 
     let currentWordDef = findDefinition.findDefinitionInFiles(currentWord, document.uri.fsPath)
 
@@ -38,9 +37,4 @@ let IdrisReferenceProvider = (function () {
       resolve(locations)
     })
   }
-  return IdrisReferenceProvider
-}())
-
-module.exports = {
-  IdrisReferenceProvider
 }

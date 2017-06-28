@@ -14,7 +14,7 @@ export const IDRIS_MODE = [
 
 export const IPKG_MODE = { language: 'ipkg', scheme: 'file' }
 
-export let getCommands = () => {
+export let getCommands = (): [string, (..._: {}[])=> void][] => {
   return [
     ['idris.typecheck', runCommand(commands.typecheckFile)],
     ['idris.type-of', runCommand(commands.typeForWord)],
@@ -38,13 +38,13 @@ export let getCommands = () => {
   ]
 }
 
-let cleanupIbc = (_: {}): void => {
+let cleanupIbc = (..._: {}[]): void => {
   common.getAllFiles('ibc').forEach((file) => {
     fs.unlinkSync(file)
   })
 }
 
-let newProject = (_: {}): void => {
+let newProject = (..._: {}[]): void => {
   vscode.window.showInputBox({ prompt: 'Project name' }).then(val => {
     let result = cp.spawnSync("idrin", ["new", val], { cwd: path.resolve(common.getSafeRoot(), "../") })
     if (result.status != 0) {
@@ -93,7 +93,7 @@ export let typeCheckOnSave = (): void => {
   }
 }
 
-let runCommand = (command: (uri: string) => void): (_: {}) => void => {
+let runCommand = (command: (uri: string) => void): (..._: {}[]) => void => {
   return (_) => {
     withCompilerOptions(command)
   }

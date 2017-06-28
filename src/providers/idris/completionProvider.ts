@@ -5,8 +5,9 @@ import * as completionUtil from '../completionUtil'
 import * as vscode from 'vscode'
 import * as Rx from 'rx-lite'
 
-const snippets = require('../../../snippets/idris.json')
+const snippets: { [name: string]: { prefix: string, body: string[], description?: string } } = require('../../../snippets/idris.json')
 
+// TODO Lexer for matching
 const unicodeMap = new Map<string, string>()
 unicodeMap.set("\\alpha", "α")
 unicodeMap.set("\\beta", "β")
@@ -35,16 +36,6 @@ let identList: string[]
 // cache previous completion items when successfully typechecking file
 let lastReplCompletionItems: vscode.CompletionItem[] = []
 
-let buildCompletionList = (): void => {
-  const identSet = new Set<string>()
-  for(const file of common.getAllFilesExts(['idr', 'lidr'])) {
-    for (const ident of common.getIdents(file)) {
-      identSet.add(ident)
-    }
-  }
-  identList = [...identSet]
-}
-
 let getUnicodeCompletion = (currentWord: string, wordRange: vscode.Range): vscode.CompletionItem[] => {
   let result: vscode.CompletionItem[] = []
   unicodeMap.forEach((value, key) => {
@@ -58,18 +49,26 @@ let getUnicodeCompletion = (currentWord: string, wordRange: vscode.Range): vscod
   return result
 }
 
-let IdrisCompletionProvider = (function () {
-  function IdrisCompletionProvider() { }
+let snippetItems = Object.keys(snippets).map((k) => {
+  let snippet = snippets[k]
+  let item = new vscode.CompletionItem(snippet.prefix)
+  item.insertText = new vscode.SnippetString(snippet.body.join("\n"))
+  item.kind = 14
+  return item
+})
 
-  let snippetItems = Object.keys(snippets).map((k) => {
-    let snippet = snippets[k]
-    let item = new vscode.CompletionItem(snippet.prefix)
-    item.insertText = new vscode.SnippetString(snippet.body.join("\n"))
-    item.kind = 14
-    return item
-  })
+export default class IdrisCompletionProvider implements vscode.CompletionItemProvider {
+  static buildCompletionList(): void {
+    const identSet = new Set<string>()
+    for(const file of common.getAllFilesExts(['idr', 'lidr'])) {
+      for (const ident of common.getIdents(file)) {
+        identSet.add(ident)
+      }
+    }
+    identList = [...identSet]
+  }
 
-  IdrisCompletionProvider.prototype.provideCompletionItems = (document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken) => {
+  provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, _token: vscode.CancellationToken) {
     let wordRange = document.getWordRangeAtPosition(position, /(\\)?'?\w+(\.\w+)?'?/i)
     let currentWord = document.getText(wordRange).trim()
     let currentLine = document.lineAt(position)
@@ -148,10 +147,4 @@ let IdrisCompletionProvider = (function () {
       return null
     }
   }
-  return IdrisCompletionProvider
-}())
-
-module.exports = {
-  IdrisCompletionProvider,
-  buildCompletionList
 }
